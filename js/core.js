@@ -21,13 +21,23 @@
   // }
   const Laws = {
     _list: [],
+    // law.group — строка-идентификатор группы, например '1.13' или 'BETA'
     register(law) {
-      // нормализуем значения по умолчанию параметров
       law.params = (law.params || []).map(p => ({ ...p, value: p.value ?? p.default ?? p.min ?? 0 }));
       this._list.push(law);
     },
     all() { return this._list.slice(); },
-    get(id) { return this._list.find(l => l.id === id); }
+    get(id) { return this._list.find(l => l.id === id); },
+    // Возвращает массив групп: [{id, label, laws:[...]}, ...]
+    groups() {
+      const map = new Map();
+      for (const law of this._list) {
+        const g = law.group || 'Без группы';
+        if (!map.has(g)) map.set(g, []);
+        map.get(g).push(law);
+      }
+      return Array.from(map.entries()).map(([id, laws]) => ({ id, laws }));
+    }
   };
 
   // ---------- Утилиты ----------
@@ -82,12 +92,12 @@
   Engine.prototype.setLaw = function (law) {
     this.law = law;
     this.t = 0;
-    // Состояние закона — это объект, который закон может свободно мутировать
-    // (текущие значения + любые внутренние данные: волны, частицы и т. д.).
     this.state = { params: {} };
     (law.params || []).forEach(p => { this.state.params[p.id] = p.value; });
     const fit = U.fitCanvas(this.canvas);
     this._size = { w: fit.w, h: fit.h };
+    // Полностью очищаем canvas при смене закона — никаких артефактов от предыдущей сцены
+    fit.ctx.clearRect(0, 0, fit.w, fit.h);
     if (typeof law.init === 'function') law.init(fit.ctx, this.state, fit.w, fit.h);
   };
 
@@ -127,12 +137,11 @@
         if (this.running && typeof this.law.update === 'function') {
           this.law.update(this.state, dt);
         }
-        // Фон canvas — мягкое затемнение, добавляет след у движущихся объектов
+        // Полная очистка каждый кадр. Законам, которым нужен «след»
+        // (brownian, gravity), достаточно рисовать полупрозрачный фон
+        // в самом начале своего render() — они уже это делают.
         const ctx = fit.ctx;
-        ctx.save();
-        ctx.fillStyle = 'rgba(7, 10, 15, 0.12)';
-        ctx.fillRect(0, 0, fit.w, fit.h);
-        ctx.restore();
+        ctx.clearRect(0, 0, fit.w, fit.h);
 
         this.law.render(fit.ctx, this.state, fit.w, fit.h, this.t);
       }

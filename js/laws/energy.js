@@ -19,6 +19,7 @@
 
   Laws.register({
     id: 'energy',
+    group: '1.14',
     title: 'Закон сохранения энергии',
     description: 'Полная механическая энергия замкнутой системы постоянна. Маятник: Eₖ максимальна внизу, Eₚ — в крайних точках. Они меняются в противофазе, сумма остаётся постоянной.',
     formula: 'Eₖ + Eₚ = E = const',
@@ -38,7 +39,7 @@
       return [
         { k: 'Eₖ', v: fmtE(Ek) + ' Дж' },
         { k: 'Eₚ', v: fmtE(Ep) + ' Дж' },
-        { k: 'E',  v: fmtE(Ek + Ep) + ' Дж' }
+        { k: 'E',  v: fmtE(s.E0 || (Ek + Ep)) + ' Дж  ✓' }
       ];
     },
 
@@ -47,22 +48,30 @@
     },
 
     onParam(id, value, state) {
-      // При изменении начального угла перезапускаем маятник из новой позиции
-      if (id === 'phi0') {
-        state.phi   = value * Math.PI / 180;
+      // При смене любого параметра, влияющего на полную энергию — пересчитываем E0 и перезапускаем
+      if (['phi0', 'm', 'g', 'L'].includes(id)) {
+        // Применяем новое значение в params (движок сделает это сам, но нам нужно его уже сейчас)
+        state.params[id] = value;
+        const phi0 = state.params.phi0 * Math.PI / 180;
+        state.phi   = phi0;
         state.omega = 0;
         state.trail    = [];
         state.history  = [];
-        state.Emax_obs = 0;
+        const { m, g, L } = state.params;
+        state.E0 = m * g * L * (1 - Math.cos(phi0));
       }
     },
 
     reset(state) {
-      state.phi      = (state.params.phi0 || 45) * Math.PI / 180;
+      const phi0 = (state.params.phi0 || 45) * Math.PI / 180;
+      state.phi      = phi0;
       state.omega    = 0;
-      state.trail    = [];   // шлейф груза
-      state.history  = [];   // история [Ek, Ep] для графика E(t)
-      state.Emax_obs = 0;    // наблюдаемый максимум полной энергии
+      state.trail    = [];
+      state.history  = [];
+      // E0 — полная энергия системы, фиксируется при старте и не меняется.
+      // В начальный момент omega=0, поэтому E0 = Eₚ(phi0) = m·g·L·(1-cos(phi0)).
+      const { m, g, L } = state.params;
+      state.E0 = m * g * L * (1 - Math.cos(phi0));
     },
 
     update(state, dt) {
@@ -89,9 +98,9 @@
       const Ep = m * g * L * (1 - Math.cos(state.phi));
       const E  = Ek + Ep;
 
-      // Обновляем наблюдаемый максимум (растёт, но не падает — шкала стабильна)
-      if (E > state.Emax_obs) state.Emax_obs = E;
-      const Emax = Math.max(state.Emax_obs, 1e-6);
+      // Шкала нормируется по E0 — фиксированной полной энергии.
+      // Это гарантирует, что бар всегда заполнен на 100% (Eк+Eп = E0 = const).
+      const Emax = Math.max(state.E0 || 1e-6, 1e-6);
 
       // Накапливаем историю для графика (не чаще ~30 точек/сек)
       state.history.push({ Ek, Ep });
@@ -319,8 +328,8 @@
       Draw.text(ctx, 'Eₚ  потенц.', col2x, lblY1, { color: '#ffb86b', font: '10px JetBrains Mono, monospace', align: 'right' });
       Draw.text(ctx, fmtE(Ep) + ' Дж', col2x, lblY2, { color: '#e8edf5', font: '11px JetBrains Mono, monospace', align: 'right' });
 
-      // E итого
-      Draw.text(ctx, 'E = ' + fmtE(E) + ' Дж', colMid, lblY3, { color: '#7cf2c8', font: '11px JetBrains Mono, monospace', align: 'center' });
+      // E = const — показываем зафиксированное значение, а не плавающую сумму
+      Draw.text(ctx, 'E = ' + fmtE(Emax) + ' Дж  (const)', colMid, lblY3, { color: '#7cf2c8', font: '11px JetBrains Mono, monospace', align: 'center' });
 
       // --- Секция 3: График E(t) ---
       const chartTop  = lblY3 + 22;

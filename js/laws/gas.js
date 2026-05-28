@@ -14,6 +14,7 @@
 
   Laws.register({
     id: 'gas',
+    group: '1.14',
     title: 'Уравнение состояния газа',
     description: 'p·V = ν·R·T. Изменяйте температуру, объём или количество молекул. Поршень двигается при изменении объёма, молекулы ускоряются при нагреве, манометр показывает давление.',
     formula: 'p · V = ν · R · T',
@@ -153,7 +154,7 @@
         ctx.moveTo(tmX - 5, ty); ctx.lineTo(tmX, ty);
         ctx.stroke();
         Draw.text(ctx, Math.round(100 + i * 175) + '', tmX - 7, ty - 4,
-            { color: '#5a6577', font: '8px JetBrains Mono', align: 'right' });
+          { color: '#5a6577', font: '8px JetBrains Mono', align: 'right' });
       }
       ctx.restore();
       Draw.text(ctx, 'T', tmX + tmW / 2, tmTop - 17, { color: '#e8edf5', font: 'italic 14px Fraunces, serif', align: 'center' });
@@ -261,8 +262,7 @@
       }
       ctx.restore();
       // подпись объёма под штоком
-      Draw.text(ctx, 'поршень',  pX + pW + 8, L.mCY + L.mR + 28, { color: '#4a6480', font: '10px JetBrains Mono, monospace' });
-      Draw.text(ctx, `V = ${U.fmt(V * 0.5, 1)} л`, pX + pW + 8, L.mCY + L.mR + 44, { color: '#5ac8fa', font: '11px JetBrains Mono, monospace' });
+      Draw.text(ctx, 'поршень',  pX + pW + 8, L.mCY + L.mR + 44, { color: '#8ab8d8', font: '700 13px JetBrains Mono, monospace' });
 
       // ── Манометр ──────────────────────────────────────────────────
       const { mCX, mCY, mR } = L;
@@ -340,11 +340,11 @@
 
       // Подсказка
       const hint = T > 500  ? 'Высокая T → быстрые молекулы → высокое давление'
-          : T < 200  ? 'Низкая T → медленные молекулы → низкое давление'
-              : V < 25   ? 'Малый V → молекулы чаще бьют по стенкам → давление растёт'
-                  :             'Изменяйте T, V, ν и наблюдайте за уравнением';
+                 : T < 200  ? 'Низкая T → медленные молекулы → низкое давление'
+                 : V < 25   ? 'Малый V → молекулы чаще бьют по стенкам → давление растёт'
+                 :             'Изменяйте T, V, ν и наблюдайте за уравнением';
       Draw.text(ctx, hint, eqX0 + eqW / 2, eqY + 36,
-          { color: '#5a6577', font: '10px JetBrains Mono, monospace', align: 'center' });
+        { color: '#5a6577', font: '10px JetBrains Mono, monospace', align: 'center' });
     }
   });
 })();
