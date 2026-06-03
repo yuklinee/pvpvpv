@@ -115,14 +115,18 @@
 
       if (!state.planet) return;
       const cx = w / 2, cy = h / 2;
-      const scale = Math.min(w, h) * (mobile ? 0.40 : 0.35);
+      // Масштаб: r_a (афелий) должен занимать ~45% меньшей стороны экрана
+      const viewR = Math.min(w, h) * (mobile ? 0.42 : 0.38);
+      const orbitA = state.orbitA || 100;
+      const orbitE = state.orbitE || 0;
+      const r_a = orbitA * (1 + orbitE);
+      const pixPerUnit = viewR / Math.max(r_a, 1);
 
-      // Перевод координат планеты → пиксели
-      const px = cx + state.planet.x * scale / (scale * 1.2);
-      const py = cy - state.planet.y * scale / (scale * 1.2);
+      const px = cx + state.planet.x * pixPerUnit;
+      const py = cy - state.planet.y * pixPerUnit;
       const toScreen = (x, y) => ({
-        sx: cx + x * scale / (scale * 1.2),
-        sy: cy - y * scale / (scale * 1.2),
+        sx: cx + x * pixPerUnit,
+        sy: cy - y * pixPerUnit,
       });
 
       // Трек
@@ -136,7 +140,7 @@
         ctx.strokeStyle = 'rgba(255,255,255,0.03)';
         ctx.lineWidth   = 1;
         ctx.beginPath();
-        ctx.arc(cx, cy, r * scale / 1.1, 0, Math.PI * 2);
+        ctx.arc(cx, cy, r * orbitA * pixPerUnit, 0, Math.PI * 2);
         ctx.stroke();
       }
       ctx.restore();
@@ -199,8 +203,7 @@
       const rPx = Math.hypot(state.planet.x, state.planet.y);
       const spd  = Math.hypot(state.planet.vx, state.planet.vy);
       // Цвет планеты: ближе к звезде — горячее (оранжевый), дальше — холоднее (синий)
-      const maxR  = scale / 1.2 * 1.5;
-      const heatN = U.clamp(1 - rPx / maxR, 0, 1);
+      const heatN = U.clamp(1 - rPx / Math.max(r_a * 1.5, 1), 0, 1);
       const pr = Math.round(80 + heatN * 120);
       const pg = Math.round(160 + heatN * 20);
       const pb = Math.round(255 - heatN * 180);
@@ -216,8 +219,10 @@
 
       // Вектор скорости
       const vScale = 3.5;
-      const { sx: vex, sy: vey } = toScreen(state.planet.x + state.planet.vx * vScale / 1.2,
-                                             state.planet.y + state.planet.vy * vScale / 1.2);
+      const { sx: vex, sy: vey } = toScreen(
+        state.planet.x + state.planet.vx * vScale,
+        state.planet.y + state.planet.vy * vScale
+      );
       ctx.save();
       ctx.strokeStyle = '#7cf2c8'; ctx.lineWidth = 1.5;
       ctx.shadowBlur = 6; ctx.shadowColor = '#7cf2c8';

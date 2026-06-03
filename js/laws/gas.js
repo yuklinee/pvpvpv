@@ -103,6 +103,20 @@
         m.vy *= k;
       }
       state.hitFlashes = state.hitFlashes.filter(f => (f.age += dt) < 0.5);
+
+      // Движение молекул в update() — иначе пауза не работает
+      if (!state._lc) return;
+      const L = state._lc;
+      const hits = [];
+      for (const m of state.molecules) {
+        m.x += m.vx * dt;
+        m.y += m.vy * dt;
+        if (m.x - m.r < L.vLeft)  { m.x = L.vLeft  + m.r; m.vx =  Math.abs(m.vx); hits.push({ x: L.vLeft,  y: m.y }); }
+        if (m.x + m.r > L.vRight) { m.x = L.vRight - m.r; m.vx = -Math.abs(m.vx); hits.push({ x: L.vRight, y: m.y }); }
+        if (m.y - m.r < L.top)    { m.y = L.top    + m.r; m.vy =  Math.abs(m.vy); hits.push({ x: m.x, y: L.top  }); }
+        if (m.y + m.r > L.bot)    { m.y = L.bot    - m.r; m.vy = -Math.abs(m.vy); hits.push({ x: m.x, y: L.bot  }); }
+      }
+      for (const hh of hits) state.hitFlashes.push({ ...hh, age: 0 });
     },
 
     render(ctx, state, w, h) {
@@ -114,18 +128,7 @@
       const p_Pa = nu * R_GAS * T / (V / 1000);
       state.pSmoothed = U.smooth(state.pSmoothed || p_Pa, p_Pa, 1 / 60, 0.2);
 
-      // ── Физика молекул: движение + отскок от стенок цилиндра ──────
-      const dtSub = 1 / 120;
-      const hits  = [];
-      for (const m of state.molecules) {
-        m.x += m.vx * dtSub;
-        m.y += m.vy * dtSub;
-        if (m.x - m.r < L.vLeft)  { m.x = L.vLeft  + m.r; m.vx =  Math.abs(m.vx); hits.push({ x: L.vLeft,  y: m.y, side: 'L' }); }
-        if (m.x + m.r > L.vRight) { m.x = L.vRight - m.r; m.vx = -Math.abs(m.vx); hits.push({ x: L.vRight, y: m.y, side: 'R' }); }
-        if (m.y - m.r < L.top)    { m.y = L.top    + m.r; m.vy =  Math.abs(m.vy); hits.push({ x: m.x, y: L.top,  side: 'T' }); }
-        if (m.y + m.r > L.bot)    { m.y = L.bot    - m.r; m.vy = -Math.abs(m.vy); hits.push({ x: m.x, y: L.bot,  side: 'B' }); }
-      }
-      for (const hh of hits) state.hitFlashes.push({ ...hh, age: 0 });
+      state._lc = L; // геометрия для update()
 
       // ── Термометр ──────────────────────────────────────────────────
       const tmW   = 14;

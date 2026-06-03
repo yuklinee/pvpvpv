@@ -313,27 +313,30 @@
       ctx.stroke();
       ctx.restore();
 
-      // --- Секция 2: ФИКСИРОВАННЫЕ числа под баром ---
-      const lblY1 = barTop + barH + 14;
-      const lblY2 = lblY1 + 18;
-      const lblY3 = lblY2 + 18;
+      // --- Секция 2: числа под баром ---
+      const lblY1 = barTop + barH + 13;
       const colMid = bx + barW / 2;
 
-      // Eₖ — левая колонка (фиксированная)
-      const col1x = bx + 2;
-      Draw.text(ctx, mobile ? 'Eₖ' : 'Eₖ  кинетич.', col1x, lblY1, { color: '#5ac8fa', font: '10px JetBrains Mono, monospace' });
-      Draw.text(ctx, fmtE(Ek) + ' Дж', col1x, lblY2, { color: '#e8edf5', font: '11px JetBrains Mono, monospace' });
-
-      // Eₚ — правая колонка (фиксированная)
-      const col2x = bx + barW;
-      Draw.text(ctx, mobile ? 'Eₚ' : 'Eₚ  потенц.', col2x, lblY1, { color: '#ffb86b', font: '10px JetBrains Mono, monospace', align: 'right' });
-      Draw.text(ctx, fmtE(Ep) + ' Дж', col2x, lblY2, { color: '#e8edf5', font: '11px JetBrains Mono, monospace', align: 'right' });
-
-      // E = const — показываем зафиксированное значение, а не плавающую сумму
-      Draw.text(ctx, 'E = ' + fmtE(Emax) + ' Дж  (const)', colMid, lblY3, { color: '#7cf2c8', font: '11px JetBrains Mono, monospace', align: 'center' });
+      if (mobile) {
+        // На мобильном — три строки: Eₖ, Eₚ, E=const
+        Draw.text(ctx, 'Eₖ = ' + fmtE(Ek) + ' Дж', bx + 2, lblY1,      { color: '#5ac8fa', font: '10px JetBrains Mono, monospace' });
+        Draw.text(ctx, 'Eₚ = ' + fmtE(Ep) + ' Дж', bx + 2, lblY1 + 16,  { color: '#ffb86b', font: '10px JetBrains Mono, monospace' });
+        Draw.text(ctx, 'E = ' + fmtE(Emax) + ' Дж (const)', bx + 2, lblY1 + 32, { color: '#7cf2c8', font: '10px JetBrains Mono, monospace' });
+      } else {
+        const lblY2 = lblY1 + 18;
+        const lblY3 = lblY2 + 18;
+        const col1x = bx + 2;
+        const col2x = bx + barW;
+        Draw.text(ctx, 'Eₖ  кинетич.', col1x, lblY1, { color: '#5ac8fa', font: '10px JetBrains Mono, monospace' });
+        Draw.text(ctx, fmtE(Ek) + ' Дж', col1x, lblY2, { color: '#e8edf5', font: '11px JetBrains Mono, monospace' });
+        Draw.text(ctx, 'Eₚ  потенц.', col2x, lblY1, { color: '#ffb86b', font: '10px JetBrains Mono, monospace', align: 'right' });
+        Draw.text(ctx, fmtE(Ep) + ' Дж', col2x, lblY2, { color: '#e8edf5', font: '11px JetBrains Mono, monospace', align: 'right' });
+        Draw.text(ctx, 'E = ' + fmtE(Emax) + ' Дж  (const)', colMid, lblY3, { color: '#7cf2c8', font: '11px JetBrains Mono, monospace', align: 'center' });
+      }
+      const _lblOffset = mobile ? 48 : 54; // высота блока чисел
 
       // --- Секция 3: График E(t) ---
-      const chartTop  = lblY3 + 22;
+      const chartTop  = lblY1 + _lblOffset;
       const chartH    = rh - (chartTop - ry) - 8;
       const chartW    = rw - 16;
       const chartX    = bx;
@@ -379,16 +382,16 @@
       drawHistLine('#5ac8fa', 'Ek');
       drawHistLine('#ffb86b', 'Ep');
 
-      // Легенда
-      const legY = chartTop + chartH - 12;
+      // Легенда — над графиком, не перекрывает линии
+      const legY = chartTop + 6;
       ctx.save();
       ctx.fillStyle = '#5ac8fa';
-      ctx.fillRect(chartX + 4, legY, 16, 2);
-      Draw.text(ctx, 'Eₖ', chartX + 22, legY - 4, { color: '#5ac8fa', font: '9px JetBrains Mono, monospace' });
+      ctx.fillRect(chartX + 4, legY + 4, 14, 2);
+      Draw.text(ctx, 'Eₖ', chartX + 20, legY, { color: '#5ac8fa', font: '9px JetBrains Mono, monospace' });
       ctx.fillStyle = '#ffb86b';
-      ctx.fillRect(chartX + 50, legY, 16, 2);
+      ctx.fillRect(chartX + 44, legY + 4, 14, 2);
       ctx.restore();
-      Draw.text(ctx, 'Eₚ', chartX + 68, legY - 4, { color: '#ffb86b', font: '9px JetBrains Mono, monospace' });
+      Draw.text(ctx, 'Eₚ', chartX + 60, legY, { color: '#ffb86b', font: '9px JetBrains Mono, monospace' });
     }
   });
 })();

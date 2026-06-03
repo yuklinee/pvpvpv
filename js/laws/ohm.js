@@ -96,9 +96,9 @@
       ctx.strokeStyle = '#070a0f'; ctx.lineWidth = 6;
       ctx.beginPath(); ctx.moveTo(x1, byMid - bH * 0.5 + 3); ctx.lineTo(x1, byMid + bH * 0.2 - 3); ctx.stroke();
       ctx.restore();
-      // Подпись батареи — над серединой левого провода, не перекрывает ничего
-      const uLabel = `U=${U.fmt(state.params.U, 1)} В`;
-      Draw.text(ctx, uLabel, x1, y1 - 10, { color: '#7cf2c8', align: 'center', font: (mobile ? '10px' : '11px') + ' JetBrains Mono,monospace' });
+      // Подпись батареи — справа от неё, на уровне середины
+      Draw.text(ctx, `U=${U.fmt(state.params.U, 1)} В`, x1 + 18, byMid - 6,
+        { color: '#7cf2c8', font: (mobile ? '10px' : '11px') + ' JetBrains Mono,monospace' });
 
       // === Резистор (верхний провод, посередине) ===
       const rxC = (x1 + x2) / 2, ry = y1;
@@ -116,8 +116,8 @@
       ctx.fillRect(rxC - rW / 2, ry - rH / 2, rW, rH);
       ctx.strokeRect(rxC - rW / 2, ry - rH / 2, rW, rH);
       ctx.restore();
-      // Подпись резистора — над ним, всегда по центру
-      Draw.text(ctx, `R=${U.fmt(state.params.R, 1)} Ом`, rxC, ry - rH / 2 - (mobile ? 6 : 8),
+      // Подпись резистора — под ним, ниже верхнего провода
+      Draw.text(ctx, `R=${U.fmt(state.params.R, 1)} Ом`, rxC, ry + rH / 2 + (mobile ? 5 : 7),
         { color: '#ffb86b', align: 'center', font: (mobile ? '10px' : '11px') + ' JetBrains Mono,monospace' });
 
       // === Амперметр (правая сторона) ===
@@ -133,10 +133,10 @@
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText('A', axX, ayM);
       ctx.restore();
-      // Подпись тока — под амперметром, всегда помещается
+      // Подпись тока — слева от амперметра
       const I = state.params.U / state.params.R;
-      Draw.text(ctx, `I=${U.fmt(I, 2)} А`, axX, ayM + ar + (mobile ? 8 : 10),
-        { color: '#5ac8fa', align: 'center', font: (mobile ? '10px' : '11px') + ' JetBrains Mono,monospace' });
+      Draw.text(ctx, `I=${U.fmt(I, 2)} А`, axX - ar - 6, ayM - 6,
+        { color: '#5ac8fa', align: 'right', font: (mobile ? '10px' : '11px') + ' JetBrains Mono,monospace' });
 
       // === Электроны ===
       for (const e of state.electrons) {

@@ -131,8 +131,8 @@
       }
 
       // ── Силовые линии ─────────────────────────────────────────
-      if (showLines && !mobile) {
-        this._drawFieldLines(ctx, state, w, h, q1, q2, p1, p2);
+      if (showLines) {
+        this._drawFieldLines(ctx, state, w, h, q1, q2, p1, p2, mobile);
       }
 
       // ── Линия между зарядами ──────────────────────────────────
@@ -230,7 +230,7 @@
     },
 
     // Трассировка силовых линий методом Эйлера от каждого заряда
-    _drawFieldLines(ctx, state, w, h, q1, q2, p1, p2) {
+    _drawFieldLines(ctx, state, w, h, q1, q2, p1, p2, mobile = false) {
       const startCharge = q1 >= 0 ? 0 : 1; // линии начинаем с положительного заряда
       const charges = [
         { x: p1.x, y: p1.y, q: q1 },
@@ -243,7 +243,8 @@
       for (let ci = 0; ci < 2; ci++) {
         const ch = charges[ci];
         if (ch.q === 0) continue;
-        const lineCount = Math.min(N_LINES, Math.round(Math.abs(ch.q) * 2 + 4));
+        const maxLines  = mobile ? 6 : N_LINES;
+        const lineCount = Math.min(maxLines, Math.round(Math.abs(ch.q) * 2 + 4));
 
         for (let li = 0; li < lineCount; li++) {
           const angle = (li / lineCount) * Math.PI * 2;
@@ -255,7 +256,7 @@
           ctx.beginPath();
           ctx.moveTo(x, y);
 
-          const stepSize = 5;
+          const stepSize = mobile ? 9 : 5;
           const maxSteps = 260;
           let prevX = x, prevY = y;
 
