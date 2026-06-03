@@ -63,17 +63,18 @@
       const { lambda, d, L, showWaves } = state.params;
       const color = this._wavelengthToColor(lambda);
       const colStr = `rgb(${color.r},${color.g},${color.b})`;
+      const mobile = w < 480;
 
       Draw.bgGrid(ctx, w, h, 32);
 
-      // Геометрия сцены:
-      //  - левый край: источник (лазер)
-      //  - чуть правее: барьер с двумя щелями (вертикальная линия x = bx)
-      //  - правее: экран x = ex
       const padding = Math.min(w, h) * 0.06;
-      const bx = w * 0.28;             // позиция барьера
-      const ex = w - padding - 30;     // позиция экрана
-      const cy = h / 2;                // центр по вертикали
+      // На мобильном убираем правый график — не хватает места
+      const showGraph = w >= 400;
+      // Экран уже на мобильном
+      const screenW = mobile ? 18 : 28;
+      const bx = w * (mobile ? 0.26 : 0.28);
+      const ex = showGraph ? w - padding - 30 : w - padding - screenW - 4;
+      const cy = h / 2;
 
       // Реальное расстояние d_px между щелями в пикселях — масштабируем параметр для красоты
       const d_px = U.clamp(d * 2.5, 12, h * 0.4);
@@ -164,8 +165,7 @@
         return Math.cos(Math.PI * dy_from_center / fringeSpacing_px) ** 2;
       };
 
-      // --- Экран (вертикальная полоса с подсветкой интерференционной картиной) ---
-      const screenW = 28;
+      // --- Экран ---
       ctx.save();
       // фон экрана
       ctx.fillStyle = '#070a0f';
@@ -183,37 +183,33 @@
       }
       ctx.restore();
 
-      // --- График интенсивности справа от экрана ---
-      const gx0 = ex + screenW + 14;
-      const gxW = Math.max(40, w - gx0 - padding * 0.3);
-      ctx.save();
-      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-      ctx.lineWidth = 1;
-      // ось
-      ctx.beginPath();
-      ctx.moveTo(gx0, 0); ctx.lineTo(gx0, h);
-      ctx.stroke();
-      // кривая
-      ctx.strokeStyle = colStr;
-      ctx.lineWidth = 1.5;
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = colStr;
-      ctx.beginPath();
-      for (let y = 0; y < h; y += 1) {
-        const I = intensity(y);
-        const x = gx0 + I * gxW * 0.85;
-        if (y === 0) ctx.moveTo(x, y);
-        else         ctx.lineTo(x, y);
+      // --- График интенсивности справа от экрана (только если есть место) ---
+      if (showGraph) {
+        const gx0 = ex + screenW + 14;
+        const gxW = Math.max(30, w - gx0 - padding * 0.3);
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(gx0, 0); ctx.lineTo(gx0, h); ctx.stroke();
+        ctx.strokeStyle = colStr; ctx.lineWidth = 1.5;
+        ctx.shadowBlur = 8; ctx.shadowColor = colStr;
+        ctx.beginPath();
+        for (let y = 0; y < h; y += 1) {
+          const I = intensity(y);
+          const x = gx0 + I * gxW * 0.85;
+          y === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        ctx.restore();
+        Draw.text(ctx, 'I(y)', gx0 + 4, 8, { color: '#5a6577' });
       }
-      ctx.stroke();
-      ctx.restore();
-      Draw.text(ctx, 'I(y)', gx0 + 4, 8, { color: '#5a6577' });
 
       // --- Подписи ---
-      Draw.text(ctx, 'S₁', bx - 14, s1y - 6, { color: '#8a96a8', font: 'italic 12px Fraunces, serif' });
-      Draw.text(ctx, 'S₂', bx - 14, s2y - 6, { color: '#8a96a8', font: 'italic 12px Fraunces, serif' });
-      Draw.text(ctx, 'экран', ex + 4, h - 18, { color: '#5a6577', font: '10px JetBrains Mono, monospace' });
-      Draw.text(ctx, 'источник', padding * 0.5, cy - 18, { color: '#5a6577', font: '10px JetBrains Mono, monospace' });
+      const lblFont = mobile ? 'italic 10px Fraunces,serif' : 'italic 12px Fraunces,serif';
+      Draw.text(ctx, 'S₁', Math.max(bx - 14, 2), s1y - 5, { color: '#8a96a8', font: lblFont });
+      Draw.text(ctx, 'S₂', Math.max(bx - 14, 2), s2y - 5, { color: '#8a96a8', font: lblFont });
+      if (h > 160) Draw.text(ctx, 'экран', ex + 4, h - 14, { color: '#5a6577', font: '9px JetBrains Mono,monospace' });
+      if (!mobile) Draw.text(ctx, 'источник', Math.max(padding * 0.5, 4), cy - 16, { color: '#5a6577', font: '10px JetBrains Mono,monospace' });
     }
   });
 })();

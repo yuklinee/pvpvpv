@@ -107,6 +107,7 @@
     },
 
     render(ctx, state, w, h) {
+      const mobile = w < 480;
       ctx.save();
       ctx.fillStyle = 'rgba(7,10,15,0.25)';
       ctx.fillRect(0, 0, w, h);
@@ -114,7 +115,7 @@
 
       if (!state.planet) return;
       const cx = w / 2, cy = h / 2;
-      const scale = Math.min(w, h) * 0.35;
+      const scale = Math.min(w, h) * (mobile ? 0.40 : 0.35);
 
       // Перевод координат планеты → пиксели
       const px = cx + state.planet.x * scale / (scale * 1.2);
@@ -234,10 +235,10 @@
       // Метки
       Draw.text(ctx, 'M = ' + U.fmt(state.params.M, 0) + ' у.м.', cx, cy + starR + 16,
         { color: '#ffb86b', align: 'center', font: '10px JetBrains Mono, monospace' });
-      Draw.text(ctx, '→ v', px + 12, py - 8,
+      if (!mobile) Draw.text(ctx, '→ v', px + 12, py - 8,
         { color: '#7cf2c8', font: '10px JetBrains Mono, monospace' });
       // Пояснение секторов
-      Draw.text(ctx, '▲ секторы равновелики (II закон Кеплера)', w / 2, h - 16,
+      if (h > 200) Draw.text(ctx, mobile ? 'II закон Кеплера' : '▲ секторы равновелики (II закон Кеплера)', w / 2, h - (mobile ? 10 : 16),
         { color: '#5a6577', align: 'center', font: '10px JetBrains Mono, monospace' });
     }
   });

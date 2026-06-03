@@ -105,12 +105,13 @@
 
     render(ctx, state, w, h) {
       if (!state.pos) return;
+      const mobile = w < 480;
       const { q1, q2, showField, showLines } = state.params;
       const [p1, p2] = state.pos;
 
       // ── Потенциал поля (тепловая карта) ───────────────────────
       if (showField) {
-        const step = 10;
+        const step = mobile ? 16 : 10;
         for (let px = 0; px <= w; px += step) {
           for (let py = 0; py <= h; py += step) {
             const r1 = Math.max(18, Math.hypot(px - p1.x, py - p1.y));
@@ -130,7 +131,7 @@
       }
 
       // ── Силовые линии ─────────────────────────────────────────
-      if (showLines) {
+      if (showLines && !mobile) {
         this._drawFieldLines(ctx, state, w, h, q1, q2, p1, p2);
       }
 
@@ -207,7 +208,7 @@
           { color: col, align: 'center', font: '700 11px JetBrains Mono, monospace' });
         // Подсказка о перетаскивании
         if (state.drag === null) {
-          Draw.text(ctx, '✥ drag', pos.x, pos.y + rad + 28,
+          if (!mobile) Draw.text(ctx, '✥ drag', pos.x, pos.y + rad + 28,
             { color: '#3a4452', align: 'center', font: '9px JetBrains Mono, monospace' });
         }
       };
@@ -217,7 +218,9 @@
 
       // ── Расстояние между зарядами ─────────────────────────────
       const midX = (p1.x + p2.x) / 2, midY = (p1.y + p2.y) / 2 - 14;
-      Draw.text(ctx, `r = ${U.fmt(r / 80, 2)} у.е.`, midX, midY,
+      const rLabel = `r = ${U.fmt(r / 80, 2)} у.е.`;
+      const midYSafe = Math.max(14, Math.min(midY, h - 28));
+      Draw.text(ctx, rLabel, midX, midYSafe,
         { color: '#8a96a8', align: 'center', font: '10px JetBrains Mono, monospace' });
 
       // ── F внизу ───────────────────────────────────────────────

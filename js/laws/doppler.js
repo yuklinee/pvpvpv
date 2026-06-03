@@ -92,10 +92,11 @@
     },
 
     render(ctx, state, w, h) {
+      const mobile = w < 480;
       Draw.bgGrid(ctx, w, h, 40);
       const cy = h / 2;
       const { f0, vs, v } = state.params;
-      const margin = w * 0.11;
+      const margin = w * (mobile ? 0.08 : 0.11);
 
       // Границы и смена направления
       if (state.srcX > w - margin) { state.srcX = w - margin; state.srcVX = -1; }
@@ -130,8 +131,8 @@
       ctx.restore();
 
       // ── Наблюдатели ─────────────────────────────────────────────
-      const obsLx = margin * 0.35;
-      const obsRx = w - margin * 0.35;
+      const obsLx = mobile ? 18 : margin * 0.35;
+      const obsRx = mobile ? w - 18 : w - margin * 0.35;
 
       const drawObserver = (x, freq, label) => {
         // Тело наблюдателя
@@ -160,7 +161,7 @@
         const col2 = freq > f0 * 1.01 ? '#ff6e9c' : freq < f0 * 0.99 ? '#5ac8fa' : '#7cf2c8';
         Draw.text(ctx, freqLabel, x, cy + 26,
           { color: col2, align: 'center', font: '700 12px JetBrains Mono, monospace' });
-        Draw.text(ctx, label, x, cy + 40,
+        if (!mobile) Draw.text(ctx, label, x, cy + 40,
           { color: '#5a6577', align: 'center', font: '10px JetBrains Mono, monospace' });
 
         // Стрелка-индикатор: частота выше/ниже базовой
@@ -221,10 +222,11 @@
       ctx.restore();
 
       // Подписи над/под источником
-      Draw.text(ctx, `f₀ = ${f0} Гц`, sx, cy - 38,
-        { color: '#7cf2c8', align: 'center', font: '10px JetBrains Mono' });
-      Draw.text(ctx, `vₛ = ${vs} м/с`, sx, cy + 16,
-        { color: '#5ac8fa', align: 'center', font: '10px JetBrains Mono' });
+      const srcFontSz = mobile ? '9px' : '10px';
+      Draw.text(ctx, `f₀=${f0} Гц`, sx, cy - (mobile ? 28 : 38),
+        { color: '#7cf2c8', align: 'center', font: srcFontSz + ' JetBrains Mono' });
+      Draw.text(ctx, `vₛ=${vs} м/с`, sx, cy + (mobile ? 12 : 16),
+        { color: '#5ac8fa', align: 'center', font: srcFontSz + ' JetBrains Mono' });
 
       // ── Строка внизу: направление и число Маха ──────────────────
       const mach = vs / v;

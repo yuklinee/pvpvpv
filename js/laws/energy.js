@@ -89,6 +89,7 @@
 
     render(ctx, state, w, h) {
       const { L, m, g } = state.params;
+      const mobile = w < 480;
       Draw.bgGrid(ctx, w, h, 32);
 
       // ------------------------------------------------------------------
@@ -110,7 +111,7 @@
       // Раскладка: маятник слева, правая панель — энергии
       // ------------------------------------------------------------------
       const pad = 20;
-      const rightPanelW = Math.min(220, w * 0.32);
+      const rightPanelW = mobile ? Math.min(130, w * 0.40) : Math.min(220, w * 0.32);
       const splitX      = w - rightPanelW - pad;
 
       // ===== МАЯТНИК =====
@@ -210,8 +211,8 @@
       ctx.stroke();
       ctx.restore();
 
-      // Вектор скорости (пропорционален omega)
-      const vScale = Lpx * 0.35;
+      // Вектор скорости — только если есть место
+      const vScale = mobile ? 0 : Lpx * 0.35;
       const vx = Math.cos(state.phi) * state.omega * vScale;
       const vy = -Math.sin(state.phi) * state.omega * vScale;
       if (Math.abs(state.omega) > 0.05) {
@@ -320,12 +321,12 @@
 
       // Eₖ — левая колонка (фиксированная)
       const col1x = bx + 2;
-      Draw.text(ctx, 'Eₖ  кинетич.', col1x, lblY1, { color: '#5ac8fa', font: '10px JetBrains Mono, monospace' });
+      Draw.text(ctx, mobile ? 'Eₖ' : 'Eₖ  кинетич.', col1x, lblY1, { color: '#5ac8fa', font: '10px JetBrains Mono, monospace' });
       Draw.text(ctx, fmtE(Ek) + ' Дж', col1x, lblY2, { color: '#e8edf5', font: '11px JetBrains Mono, monospace' });
 
       // Eₚ — правая колонка (фиксированная)
       const col2x = bx + barW;
-      Draw.text(ctx, 'Eₚ  потенц.', col2x, lblY1, { color: '#ffb86b', font: '10px JetBrains Mono, monospace', align: 'right' });
+      Draw.text(ctx, mobile ? 'Eₚ' : 'Eₚ  потенц.', col2x, lblY1, { color: '#ffb86b', font: '10px JetBrains Mono, monospace', align: 'right' });
       Draw.text(ctx, fmtE(Ep) + ' Дж', col2x, lblY2, { color: '#e8edf5', font: '11px JetBrains Mono, monospace', align: 'right' });
 
       // E = const — показываем зафиксированное значение, а не плавающую сумму

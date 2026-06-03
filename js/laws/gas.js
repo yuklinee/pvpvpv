@@ -48,15 +48,16 @@
 
       // Цилиндр: ширина линейно зависит от V
       const ratio  = params.V / 100;
-      const minVW  = Math.max(80,  w * 0.15);
-      const maxVW  = Math.min(340, w * 0.40);
+      const isMob  = w < 480;
+      const minVW  = Math.max(isMob ? 50 : 80, w * (isMob ? 0.18 : 0.15));
+      const maxVW  = Math.min(isMob ? 200 : 340, w * (isMob ? 0.42 : 0.40));
       const vW     = Math.round(U.lerp(minVW, maxVW, ratio));
 
       // Фиксированные ширины зон
       const tmZone    = 68;   // термометр + зазор справа от него
       const pistonW   = 22;   // ширина поршня
       const gapM      = 28;   // зазор поршень→манометр
-      const mR        = Math.min(50, h * 0.10);
+      const mR        = Math.min(isMob ? 32 : 50, h * (isMob ? 0.08 : 0.10));
       const mZone     = mR * 2 + 12;
 
       // Суммарная ширина всего блока
@@ -105,6 +106,7 @@
     },
 
     render(ctx, state, w, h) {
+      const mobile = w < 480;
       Draw.bgGrid(ctx, w, h, 36);
 
       const { T, V, nu } = state.params;
@@ -153,8 +155,8 @@
         ctx.beginPath();
         ctx.moveTo(tmX - 5, ty); ctx.lineTo(tmX, ty);
         ctx.stroke();
-        Draw.text(ctx, Math.round(100 + i * 175) + '', tmX - 7, ty - 4,
-          { color: '#5a6577', font: '8px JetBrains Mono', align: 'right' });
+        if (!mobile) { Draw.text(ctx, Math.round(100 + i * 175) + '', tmX - 7, ty - 4,
+          { color: '#5a6577', font: '8px JetBrains Mono', align: 'right' }); }
       }
       ctx.restore();
       Draw.text(ctx, 'T', tmX + tmW / 2, tmTop - 17, { color: '#e8edf5', font: 'italic 14px Fraunces, serif', align: 'center' });
@@ -311,7 +313,7 @@
       Draw.text(ctx, 'давление',              mCX, mCY + mR + 14, { color: '#5a6577', font: '10px JetBrains Mono',     align: 'center' });
 
       // ── Нижняя строка: уравнение p·V = ν·R·T с живыми числами ───
-      const eqY = L.bot + 24;
+      const eqY = L.bot + (mobile ? 14 : 24);
       if (eqY + 40 > h) return;
 
       // Ширина строки = ширина цилиндра + поршень + зазор (без манометра — он выше)
@@ -333,9 +335,9 @@
       const slotW    = eqW / slots;
       parts.forEach((pt, i) => {
         const cx = eqX0 + slotW * i + slotW / 2;
-        Draw.text(ctx, pt.sym, cx, eqY,      { color: pt.color, font: 'italic 700 16px Fraunces, serif',      align: 'center' });
+        Draw.text(ctx, pt.sym, cx, eqY,      { color: pt.color, font: `italic 700 ${mobile ? 12 : 16}px Fraunces,serif`, align: 'center' });
         if (pt.val)
-          Draw.text(ctx, pt.val, cx, eqY + 18, { color: pt.color, font: '10px JetBrains Mono, monospace', align: 'center' });
+          Draw.text(ctx, pt.val, cx, eqY + (mobile ? 14 : 18), { color: pt.color, font: `${mobile ? 9 : 10}px JetBrains Mono,monospace`, align: 'center' });
       });
 
       // Подсказка
@@ -343,7 +345,7 @@
                  : T < 200  ? 'Низкая T → медленные молекулы → низкое давление'
                  : V < 25   ? 'Малый V → молекулы чаще бьют по стенкам → давление растёт'
                  :             'Изменяйте T, V, ν и наблюдайте за уравнением';
-      Draw.text(ctx, hint, eqX0 + eqW / 2, eqY + 36,
+      if (!mobile) Draw.text(ctx, hint, eqX0 + eqW / 2, eqY + 36,
         { color: '#5a6577', font: '10px JetBrains Mono, monospace', align: 'center' });
     }
   });

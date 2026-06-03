@@ -135,6 +135,7 @@
     },
 
     render(ctx, state, w, h) {
+      const mobile = w < 480;
       // Полупрозрачный фон — даёт красивый «тающий» след
       ctx.save();
       ctx.fillStyle = 'rgba(7,10,15,0.20)';
@@ -147,10 +148,10 @@
 
       // Масштаб: чтобы оба звена при θ=90° помещались в ~60% высоты
       const maxLen = (L1 + L2);
-      const scale  = Math.min(w * 0.30, h * 0.38) / maxLen;
+      const scale  = Math.min(w * (mobile ? 0.45 : 0.30), h * (mobile ? 0.45 : 0.38)) / maxLen;
 
       // Точка подвеса
-      const pivX = w * 0.40;
+      const pivX = mobile ? w * 0.50 : w * 0.40;
       const pivY = h * 0.22;
 
       // Координаты шаров (θ от вертикали: x=sin, y=cos в canvas-системе)
@@ -250,6 +251,12 @@
       ctx.restore();
 
       // ── Правая панель ──────────────────────────────────────────
+      if (mobile) {
+        // На мобильном панель не отображается — маятник занимает весь экран
+        Draw.text(ctx, `E=${U.fmt(state._E,2)} Дж  ω₂=${U.fmt(state.w2,1)}`, w/2, h-12,
+          { color: '#5a6577', align: 'center', font: '10px JetBrains Mono' });
+        return;
+      }
       const panX = Math.round(w * 0.68);
       const panW = w - panX - 14;
       const panY = 14;
@@ -327,7 +334,7 @@
       // Нижняя строка
       Draw.text(ctx,
         `E = ${U.fmt(state._E, 2)} Дж  |  ω₁ = ${U.fmt(state.w1, 2)}  ω₂ = ${U.fmt(state.w2, 2)}`,
-        pivX, h - 12,
+        w * 0.40, h - 12,
         { color: '#5a6577', align: 'center', font: '10px JetBrains Mono' });
     },
   });
