@@ -67,7 +67,7 @@
       { id: 'm2',  label: 'Масса груза 2', latex: 'm₂', min: 0.2, max: 3.0, step: 0.1,  value: 1.0,  default: 1.0,  unit: 'кг',  type: 'range' },
       { id: 'th1', label: 'Нач. угол θ₁', latex: 'θ₁', min: 5,   max: 175, step: 1,    value: 120,  default: 120,  unit: '°',   type: 'range' },
       { id: 'th2', label: 'Нач. угол θ₂', latex: 'θ₂', min: 5,   max: 175, step: 1,    value: 150,  default: 150,  unit: '°',   type: 'range' },
-      { id: 'g',   label: 'Ускорение g',  latex: 'g',  min: 1.0, max: 25,  step: 0.1,  value: 9.81, default: 9.81, unit: 'м/с²',type: 'range' },
+      { id: 'g',   label: 'Скорость симуляции', latex: '',  min: 1.0, max: 25, step: 0.1, value: 10,   default: 10,   unit: '',    type: 'range' },
     ],
 
     readout(s) {
@@ -152,9 +152,15 @@
       const cB = Math.round(200 + ( 60-200)*chaos);
       const trailCol = `rgb(${cR},${cG},${cB})`;
 
-      // Трек
-      state.trail.push({ x: b2x, y: b2y });
+      // Трек в физических координатах — не зависит от размера canvas
+      state.trail.push({ th1: state.th1, th2: state.th2 });
       if (state.trail.length > TRAIL_MAX) state.trail.shift();
+
+      // Перевод физических координат трека в пиксельные
+      const trailToPx = (pt) => ({
+        x: pivX + Math.sin(pt.th1)*L1*scale + Math.sin(pt.th2)*L2*scale,
+        y: pivY + Math.cos(pt.th1)*L1*scale + Math.cos(pt.th2)*L2*scale,
+      });
 
       if (state.trail.length > 2) {
         ctx.save();
@@ -166,9 +172,11 @@
           const g = Math.round(80 + (cG-80)*a);
           const b = Math.round(120+(cB-120)*a);
           ctx.strokeStyle = `rgba(${r},${g},${b},${(a*0.75).toFixed(3)})`;
+          const p0 = trailToPx(state.trail[i-1]);
+          const p1 = trailToPx(state.trail[i]);
           ctx.beginPath();
-          ctx.moveTo(state.trail[i-1].x, state.trail[i-1].y);
-          ctx.lineTo(state.trail[i].x,   state.trail[i].y);
+          ctx.moveTo(p0.x, p0.y);
+          ctx.lineTo(p1.x, p1.y);
           ctx.stroke();
         }
         ctx.restore();
@@ -268,8 +276,10 @@
           const gg = Math.round(40+(cG-40)*a);
           const bb = Math.round(80+(cB-80)*a);
           ctx.strokeStyle = `rgba(${rr},${gg},${bb},${(a*0.85).toFixed(3)})`;
-          const p0 = toPanel(state.trail[i-1].x, state.trail[i-1].y);
-          const p1 = toPanel(state.trail[i].x,   state.trail[i].y);
+          const px0 = trailToPx(state.trail[i-1]);
+          const px1 = trailToPx(state.trail[i]);
+          const p0 = toPanel(px0.x, px0.y);
+          const p1 = toPanel(px1.x, px1.y);
           ctx.beginPath(); ctx.moveTo(p0.px, p0.py); ctx.lineTo(p1.px, p1.py); ctx.stroke();
         }
         const cur = toPanel(b2x, b2y);
